@@ -55,7 +55,6 @@ class AddEnquirySNS(Resource):
         except:
             pass
 
-        
         header = request.headers.get('X-Amz-Sns-Message-Type')
         # Perform check for subscription confirmation request, subscribe to the SNS topic
         if header == 'SubscriptionConfirmation' and 'SubscribeURL' in data:
@@ -77,7 +76,13 @@ class GetLog(Resource):
         f = open('db_log.txt', 'r')
         return f.read()
 
+
+class HealthCheck(Resource):
+    def get(self):
+        return 'DB API Available'
+
 ## Routing ##
+api.add_resource(HealthCheck, '/')
 api.add_resource(GetLog, '/log')
 api.add_resource(GetAllEnquiries, '/get-all-enquiries')
 api.add_resource(AddEnquiry, '/add-enquiry')
@@ -88,7 +93,6 @@ api.add_resource(AddEnquirySNS, '/add-enquiry-sns')
 def process_sns(msg):
     js = json.loads(msg['Message'])
     return js
-    
 
 if __name__ == "__main__":
     app.run(debug=True)
