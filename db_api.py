@@ -7,6 +7,7 @@ import json
 import requests
 import boto3
 import botocore.exceptions
+import uuid
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -52,23 +53,27 @@ class AddEnquirySNS(Resource):
     def post(self):
         try:
             data = json.loads(request.data)
-        except:
-            pass
 
-        header = request.headers.get('X-Amz-Sns-Message-Type')
-        # Perform check for subscription confirmation request, subscribe to the SNS topic
-        if header == 'SubscriptionConfirmation' and 'SubscribeURL' in data:
-            r = requests.get(data['SubscribeURL'])
+            header = request.headers.get('X-Amz-Sns-Message-Type')
+            # Perform check for subscription confirmation request, subscribe to the SNS topic
+            if header == 'SubscriptionConfirmation' and 'SubscribeURL' in data:
+                r = requests.get(data['SubscribeURL'])
 
-        if header == 'Notification':
+            #if header == 'Notification':
             enquiry = process_sns(data)
 
-        table = dynamodb.Table('Enquiry')
-        table.put_item(
-            Item = enquiry
-        )
-        
-        return enquiry
+            table = dynamodb.Table('Enquiry')
+            table.put_item(
+                Item = enquiry
+            )
+            
+            return enquiry
+
+        except Exception as e:
+            f = open('db_log.txt', 'w')
+            f.write(str(e))
+            f.close()
+            raise
 
 
 class GetLog(Resource):
@@ -92,6 +97,10 @@ api.add_resource(AddEnquirySNS, '/add-enquiry-sns')
 
 def process_sns(msg):
     js = json.loads(msg['Message'])
+
+    # Generate a Guid for the ID
+    js['id'] = str(uuid.uuid4())
+
     return js
 
 if __name__ == "__main__":
