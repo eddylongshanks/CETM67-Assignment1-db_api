@@ -30,10 +30,8 @@ class AddEnquiry(Resource):
     def post(self):
         try:
             data = json.loads(request.data)
-
-            f = open('db_log.txt', 'w')
-            f.write(str(data))
-            f.close()
+            data['id'] = get_guid()
+            log(data)
 
             table = dynamodb.Table('Enquiry')
             table.put_item(
@@ -43,9 +41,7 @@ class AddEnquiry(Resource):
             return 'Enquiry added'
 
         except Exception as e:
-            f = open('db_log.txt', 'w')
-            f.write(str(e))
-            f.close()
+            log(e)
             raise
 
 
@@ -59,8 +55,10 @@ class AddEnquirySNS(Resource):
             if header == 'SubscriptionConfirmation' and 'SubscribeURL' in data:
                 r = requests.get(data['SubscribeURL'])
 
-            #if header == 'Notification':
-            enquiry = process_sns(data)
+            if header == 'Notification':
+                enquiry = process_sns(data)
+
+            log(enquiry)
 
             table = dynamodb.Table('Enquiry')
             table.put_item(
@@ -70,9 +68,7 @@ class AddEnquirySNS(Resource):
             return enquiry
 
         except Exception as e:
-            f = open('db_log.txt', 'w')
-            f.write(str(e))
-            f.close()
+            log(e)
             raise
 
 
@@ -96,12 +92,21 @@ api.add_resource(AddEnquirySNS, '/add-enquiry-sns')
 # Methods
 
 def process_sns(msg):
+    # Converts the contents of the message string to a dictionary object
     js = json.loads(msg['Message'])
-
-    # Generate a Guid for the ID
-    js['id'] = str(uuid.uuid4())
+    js['id'] = get_guid()
 
     return js
+
+def get_guid():
+    # Generate a Guid for the ID
+    return str(uuid.uuid4())
+
+def log(data_to_save):
+    # Logs data to a local file for debugging
+    f = open('db_log.txt', 'w')
+    f.write(str(data_to_save))
+    f.close()
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -38,7 +38,6 @@ data2 = {
 }
 
 data3 = {
-    "id": "dshsjeuycssd", 
     "first_name": "pc1",
     "last_name": "Stevenson",
     "telephone_number": "07777456278"
@@ -50,5 +49,5 @@ data5 = "{'Type': 'Notification', 'MessageId': 'a2487ca9-709e-52d2-a489-25ed7879
 
 # response = get(BASE_URL + "/get-all-enquiries")
 
-response = post(BASE_URL + "/add-enquiry-sns", json = data2)
+response = post(BASE_URL + "/add-enquiry", json = data1)
 print(response.text)
