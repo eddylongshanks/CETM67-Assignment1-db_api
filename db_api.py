@@ -3,6 +3,7 @@
 
 from flask import Flask, request, jsonify
 from flask_restful import Api, Resource, reqparse, abort
+from decimal import Decimal
 import json
 import requests
 import boto3
@@ -93,7 +94,7 @@ api.add_resource(AddEnquirySNS, '/add-enquiry-sns')
 
 def process_sns(msg):
     # Converts the contents of the message string to a dictionary object
-    js = json.loads(msg['Message'])
+    js = json.loads(msg['Message'], parse_float=Decimal)
     js['id'] = get_guid()
 
     return js
