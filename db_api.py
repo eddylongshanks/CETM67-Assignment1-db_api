@@ -1,4 +1,4 @@
-""" Script for db API
+""" db API
 """
 
 from flask import Flask, request, jsonify
@@ -25,11 +25,8 @@ class GetAllEnquiries(Resource):
 
         except Exception as e:
             log(e)
-            return {
-                'statusCode': 500,
-                'body': json.dumps(str(e))
-            }
-            raise
+            response_message = str(type(e).__name__) + ": " + str(e)
+            return response_object(500, response_message)
 
 
 class AddEnquiry(Resource):
@@ -45,18 +42,13 @@ class AddEnquiry(Resource):
                 Item = data
             )
 
-            return {
-                'statusCode': 201,
-                'body': json.dumps(data)
-            }
+            response_message = json.dumps(data)
+            return response_object(201, response_message)
 
         except Exception as e:
             log(e)
-            return {
-                'statusCode': 500,
-                'body': json.dumps(str(e))
-            }
-            raise
+            response_message = str(type(e).__name__) + ": " + str(e)
+            return response_object(500, response_message)
 
 
 class AddEnquirySNS(Resource):
@@ -77,24 +69,17 @@ class AddEnquirySNS(Resource):
                 table.put_item(
                     Item = enquiry
                 )
-            
-                return {
-                    'statusCode': 201,
-                    'body': json.dumps(enquiry)
-                }
+
+                response_message = json.dumps(enquiry)
+                return response_object(201, response_message)
             else:
-                return {
-                    'statusCode': 400,
-                    'body': json.dumps(data)
-                }
+                response_message = json.dumps(data)
+                return response_object(400, response_message)
 
         except Exception as e:
             log(e)
-            return {
-                'statusCode': 500,
-                'body': json.dumps(str(e))
-            }
-            raise
+            response_message = json.dumps(str(e))
+            return response_object(500, response_message)
 
 
 class GetLog(Resource):
@@ -105,10 +90,9 @@ class GetLog(Resource):
 
 class HealthCheck(Resource):
     def get(self):
-        return {
-            'statusCode': 200,
-            'body': 'DB API Available'
-        }
+        response_message = 'DB API Available'
+        return response_object(200, response_message)
+
 
 ## Routing ##
 api.add_resource(HealthCheck, '/')
@@ -122,6 +106,8 @@ api.add_resource(AddEnquirySNS, '/add-enquiry-sns')
 def process_sns(msg):
     # Converts the contents of the message string to a dictionary object
     js = json.loads(msg['Message'])
+
+    # Adds a randomly generated Id to the object
     js['id'] = get_guid()
 
     return js
@@ -136,6 +122,12 @@ def log(data_to_save):
         log_file.write(str(data_to_save))
         log_file.write("\n")
 
+def response_object(status_code, message):
+    # encapsulates the return object
+    return {
+        'statusCode': status_code,
+        'body': message
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)
